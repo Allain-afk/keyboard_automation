@@ -1,0 +1,3 @@
+customtkinter>=5.2.2
+pynput>=1.7.6
+pydirectinput>=1.0.4

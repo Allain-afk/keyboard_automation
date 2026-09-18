@@ -10,11 +10,17 @@ from __future__ import annotations
 import threading
 import time
 
+import pydirectinput
 from pynput.keyboard import Controller as KeyboardController
 from pynput.keyboard import Key, Listener
 
 SPACE_DELAY_SECONDS = 10.0
+SPACE_HOLD_SECONDS = 0.1
+ACTION_DELAY_SECONDS = 1.0
 POLL_INTERVAL_SECONDS = 0.05
+
+pydirectinput.FAILSAFE = False
+pydirectinput.PAUSE = 0
 
 
 class SpaceAltTabAutomator:
@@ -49,8 +55,11 @@ class SpaceAltTabAutomator:
         return not self._stop_event.is_set() and self._is_running()
 
     def _press_space(self) -> None:
-        self.keyboard.press(Key.space)
-        self.keyboard.release(Key.space)
+        pydirectinput.keyDown("space")
+        try:
+            time.sleep(SPACE_HOLD_SECONDS)
+        finally:
+            pydirectinput.keyUp("space")
 
     def _switch_window(self) -> None:
         self.keyboard.press(Key.alt)
@@ -63,13 +72,17 @@ class SpaceAltTabAutomator:
     def _run_cycle(self) -> bool:
         self._press_space()
         print("Pressed Space in the current window.")
+        if not self._wait_interruptible(ACTION_DELAY_SECONDS):
+            return False
 
         self._switch_window()
-        if not self._is_running() or self._stop_event.is_set():
+        if not self._wait_interruptible(ACTION_DELAY_SECONDS):
             return False
 
         self._press_space()
         print("Pressed Space after switching windows.")
+        if not self._wait_interruptible(ACTION_DELAY_SECONDS):
+            return False
 
         self._switch_window()
         return not self._stop_event.is_set() and self._is_running()

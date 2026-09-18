@@ -7,8 +7,19 @@ Hotkeys:
 
 from __future__ import annotations
 
+from pathlib import Path
+import site
 import threading
 import time
+
+
+def _add_project_dependencies() -> None:
+    site_packages = Path(__file__).resolve().parent / ".venv" / "Lib" / "site-packages"
+    if site_packages.is_dir():
+        site.addsitedir(str(site_packages))
+
+
+_add_project_dependencies()
 
 import pydirectinput
 from pynput.keyboard import Controller as KeyboardController

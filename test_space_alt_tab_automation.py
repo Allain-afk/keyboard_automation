@@ -1,3 +1,6 @@
+from pathlib import Path
+import subprocess
+import sys
 import threading
 import unittest
 
@@ -23,6 +26,26 @@ class RecordingAutomator(SpaceAltTabAutomator):
 
 
 class SpaceAltTabAutomatorTests(unittest.TestCase):
+    def test_script_uses_project_environment_when_launcher_lacks_dependencies(self) -> None:
+        script_path = Path(__file__).with_name("space_alt_tab_automation.py")
+        base_python = Path(sys.base_prefix) / "python.exe"
+        command = (
+            "import runpy; "
+            f"runpy.run_path({str(script_path)!r}, run_name='startup_check'); "
+            "print('startup ok')"
+        )
+
+        result = subprocess.run(
+            [str(base_python), "-S", "-c", command],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            timeout=5,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertIn("startup ok", result.stdout)
+
     def test_cycle_pauses_between_each_keyboard_action(self) -> None:
         automator = RecordingAutomator()
 
